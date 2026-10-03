@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🗺️ AI Treasure Escape - Science Expo Computer Vision Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- MediaPipe Hands & Camera Utils CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header & Expo Banner -->
+    <header class="game-header">
+      <div class="logo-area">
+        <span class="badge-tag">AI SCIENCE EXPO 2026</span>
+        <h1 class="game-title">AI TREASURE ESCAPE</h1>
+      </div>
+      <div class="header-actions">
+        <button id="btn-sound" class="hdr-btn" title="Toggle Sound">🔊 AUDIO ON</button>
+        <button id="btn-fullscreen" class="hdr-btn" title="Toggle Fullscreen">⛶ FULLSCREEN</button>
+        <button id="btn-how" class="hdr-btn secondary">❓ HOW TO PLAY</button>
+      </div>
+    </header>
+
+    <!-- Main Game Layout -->
+    <main class="game-workspace">
+      <!-- Left Sidebar: Webcam Feed & Tracking Joystick -->
+      <aside class="side-panel left-panel">
+        <div class="glass-card camera-card">
+          <div class="card-header">
+            <h3>📷 AI HAND TRACKING</h3>
+            <span id="cam-status" class="status-pill waiting">INITIALIZING...</span>
+          </div>
+
+          <div class="camera-wrapper" id="cam-box" style="cursor: pointer;">
+            <video id="webcam-video" playsinline muted autoplay></video>
+            <canvas id="camera-overlay"></canvas>
+            <div id="no-hand-alert" class="hand-prompt show">
+              <div class="hand-icon-anim">📹</div>
+              <button id="btn-enable-cam" class="cta-btn" style="padding: 8px 16px; font-size: 13px; margin-top: 6px; z-index: 10;">
+                CLICK TO START CAMERA
+              </button>
+            </div>
+          </div>
+
+          <div class="joystick-info">
+            <div class="info-row">
+              <span class="lbl">DIRECTION:</span>
+              <span id="dir-display" class="val-dir">NEUTRAL</span>
+            </div>
+            <div class="info-row">
+              <span class="lbl">GESTURE:</span>
+              <span id="gesture-type" class="val-gesture">Index Tip Steer</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- How To Steer Graphic -->
+        <div class="glass-card guide-card">
+          <h4>🕹️ GESTURE STEERING</h4>
+          <div class="dpad-guide">
+            <div class="dpad-cell up" id="dpad-up">▲ UP</div>
+            <div class="dpad-row">
+              <div class="dpad-cell left" id="dpad-left">◀ LEFT</div>
+              <div class="dpad-cell center">CENTER<br><small>(STOP)</small></div>
+              <div class="dpad-cell right" id="dpad-right">RIGHT ▶</div>
+            </div>
+            <div class="dpad-cell down" id="dpad-down">▼ DOWN</div>
+          </div>
+          <p class="kb-hint">⌨️ Fallback: WASD / Arrow Keys</p>
+        </div>
+      </aside>
+
+      <!-- Center: Main Labyrinth Canvas & Overlays -->
+      <section class="canvas-section">
+        <div class="canvas-wrapper">
+          <canvas id="game-canvas" width="680" height="680"></canvas>
+          
+          <!-- Danger Proximity Alert -->
+          <div id="danger-alert" class="danger-banner">
+            <span class="danger-icon">⚠️</span> MONSTER NEARBY! RUN!
+          </div>
+
+          <!-- Virtual Fingertip Cursor -->
+          <div id="finger-cursor" class="virtual-cursor">
+            <div class="cursor-ring"></div>
+            <div class="cursor-dot"></div>
+          </div>
+
+          <!-- Dynamic UI Overlays (Attract / HowTo / Countdown / Win / GameOver) -->
+          <div id="ui-overlay" class="overlay-container">
+            <!-- Screen 1: Attract / Title Screen -->
+            <div id="screen-attract" class="modal-card">
+              <div class="modal-badge">COMPUTER VISION GAME</div>
+              <h2 class="title-glow">TREASURE ESCAPE</h2>
+              <p class="subtitle">Use your finger like a magic joystick! Outsmart the AI Monster and reach the exit!</p>
+              
+              <div class="diff-selector">
+                <span class="lbl">SELECT DIFFICULTY:</span>
+                <div class="diff-buttons">
+                  <button class="diff-btn active" data-diff="1">⭐ EXPLORER</button>
+                  <button class="diff-btn" data-diff="2">⭐⭐ ADVENTURER</button>
+                  <button class="diff-btn" data-diff="3">⭐⭐⭐ MASTER</button>
+                </div>
+              </div>
+
+              <div class="btn-group">
+                <button id="btn-start-game" class="cta-btn pulse hover-clickable">
+                  <span class="btn-text">🚀 START ESCAPE</span>
+                  <div class="hover-fill"></div>
+                </button>
+                <button id="btn-show-rules" class="cta-btn secondary hover-clickable">
+                  <span class="btn-text">📖 HOW TO PLAY</span>
+                  <div class="hover-fill"></div>
+                </button>
+              </div>
+              <div class="hover-tip">💡 Tip: Point index finger at buttons for 1.2s to auto-click!</div>
+            </div>
+
+            <!-- Screen 2: How To Play -->
+            <div id="screen-how" class="modal-card hidden">
+              <h2>🎮 HOW TO PLAY</h2>
+              <div class="rules-grid">
+                <div class="rule-box">
+                  <div class="rule-icon">☝️</div>
+                  <h4>1. Steer with Finger</h4>
+                  <p>Move your index fingertip away from center to steer your hero. Return to center to stop.</p>
+                </div>
+                <div class="rule-box">
+                  <div class="rule-icon">💎</div>
+                  <h4>2. Collect Treasures</h4>
+                  <p>Gather Diamonds (+10), Coins (+20), Crowns (+50), and Chests (+100) for maximum score!</p>
+                </div>
+                <div class="rule-box">
+                  <div class="rule-icon">👾</div>
+                  <h4>3. Dodge AI Monster</h4>
+                  <p>The Shadow Guard hunts you using A* Pathfinding! Don't let it catch you!</p>
+                </div>
+                <div class="rule-box">
+                  <div class="rule-icon">🏁</div>
+                  <h4>4. Escape through Portal</h4>
+                  <p>Reach the glowing Gold Exit portal at the bottom right before time runs out!</p>
+                </div>
+              </div>
+              <button id="btn-back-title" class="cta-btn hover-clickable">
+                <span class="btn-text">⬅️ BACK TO MENU</span>
+                <div class="hover-fill"></div>
+              </button>
+            </div>
+
+            <!-- Screen 3: Countdown 3... 2... 1... GO! -->
+            <div id="screen-countdown" class="modal-card countdown-card hidden">
+              <div id="countdown-num" class="countdown-big">3</div>
+              <p id="countdown-msg" class="countdown-sub">GET READY...</p>
+            </div>
+
+            <!-- Screen 4: Victory -->
+            <div id="screen-victory" class="modal-card victory-card hidden">
+              <div class="victory-trophy">🏆</div>
+              <h2 class="victory-title">ESCAPE SUCCESSFUL!</h2>
+              <p class="victory-desc">You outsmarted the AI Monster and escaped the labyrinth!</p>
+              
+              <div class="score-breakdown">
+                <div class="stat-cell">
+                  <span class="s-lbl">TREASURES</span>
+                  <span id="vic-treasure-pts" class="s-val">0</span>
+                </div>
+                <div class="stat-cell">
+                  <span class="s-lbl">TIME BONUS</span>
+                  <span id="vic-time-bonus" class="s-val">0</span>
+                </div>
+                <div class="stat-cell total">
+                  <span class="s-lbl">FINAL SCORE</span>
+                  <span id="vic-final-score" class="s-val">0</span>
+                </div>
+              </div>
+
+              <div id="vic-kiosk-timer" class="kiosk-note">Auto-resetting in 12s...</div>
+              
+              <div class="btn-group">
+                <button id="btn-play-again" class="cta-btn pulse hover-clickable">
+                  <span class="btn-text">🔄 PLAY AGAIN</span>
+                  <div class="hover-fill"></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Screen 5: Game Over -->
+            <div id="screen-gameover" class="modal-card gameover-card hidden">
+              <div class="gameover-icon">💀</div>
+              <h2 class="gameover-title">CAUGHT BY MONSTER!</h2>
+              <p class="gameover-desc">The AI Treasure Guard cornered you in the labyrinth!</p>
+              
+              <div class="score-breakdown">
+                <div class="stat-cell total">
+                  <span class="s-lbl">SCORE ACHIEVED</span>
+                  <span id="go-score" class="s-val">0</span>
+                </div>
+              </div>
+
+              <div id="go-kiosk-timer" class="kiosk-note">Auto-resetting in 10s...</div>
+              
+              <div class="btn-group">
+                <button id="btn-retry" class="cta-btn pulse hover-clickable">
+                  <span class="btn-text">🔁 TRY AGAIN</span>
+                  <div class="hover-fill"></div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Sidebar: Live Score HUD, Missions & AI Metrics -->
+      <aside class="side-panel right-panel">
+        <div class="glass-card hud-card">
+          <h3>📊 MISSION HUD</h3>
+          
+          <div class="hud-stat-box gold">
+            <span class="hud-label">TOTAL SCORE</span>
+            <span id="hud-score" class="hud-value">0</span>
+          </div>
+
+          <div class="hud-stat-box cyan">
+            <span class="hud-label">TREASURES FOUND</span>
+            <span id="hud-treasures" class="hud-value">0 / 8</span>
+          </div>
+
+          <div class="hud-stat-box purple">
+            <span class="hud-label">MISSION TIME</span>
+            <span id="hud-timer" class="hud-value">00:00</span>
+          </div>
+        </div>
+
+        <!-- Treasure Inventory Legend -->
+        <div class="glass-card legend-card">
+          <h4>💎 TREASURE VAULT</h4>
+          <div class="treasure-row">
+            <span class="t-icon">💎</span>
+            <span class="t-name">Diamond</span>
+            <span class="t-val">+10 pts</span>
+          </div>
+          <div class="treasure-row">
+            <span class="t-icon">🪙</span>
+            <span class="t-name">Gold Coin</span>
+            <span class="t-val">+20 pts</span>
+          </div>
+          <div class="treasure-row">
+            <span class="t-icon">👑</span>
+            <span class="t-name">Royal Crown</span>
+            <span class="t-val">+50 pts</span>
+          </div>
+          <div class="treasure-row">
+            <span class="t-icon">💰</span>
+            <span class="t-name">Treasure Chest</span>
+            <span class="t-val">+100 pts</span>
+          </div>
+        </div>
+
+        <!-- AI Monster Telemetry -->
+        <div class="glass-card ai-card">
+          <h4>🤖 AI PATHFINDING METRICS</h4>
+          <div class="info-row">
+            <span class="lbl">ALGORITHM:</span>
+            <span class="val-mono">A* (A-Star) Grid</span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">STATE:</span>
+            <span id="monster-state" class="val-mono alert">AWAKENING</span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">PROXIMITY:</span>
+            <span id="monster-dist" class="val-mono">SAFE</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/pathfinding.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/cv.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
