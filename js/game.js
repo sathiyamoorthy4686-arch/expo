@@ -634,7 +634,76 @@ class GameManager {
 
     // 3. Draw particle effects & floating score popups
     this.particles.draw(this.ctx);
+
+    // 4. Draw real-time minimap tactical radar
+    this.drawMinimap();
   }
+
+  drawMinimap() {
+    const mmCanvas = document.getElementById('minimap-canvas');
+    if (!mmCanvas) return;
+    const mmCtx = mmCanvas.getContext('2d');
+    const w = mmCanvas.width;
+    const h = mmCanvas.height;
+
+    mmCtx.fillStyle = '#06101e';
+    mmCtx.fillRect(0, 0, w, h);
+
+    if (!this.map) return;
+
+    const cellW = w / this.map.cols;
+    const cellH = h / this.map.rows;
+
+    // 1. Draw miniature walls
+    mmCtx.fillStyle = '#1e4060';
+    for (let gy = 0; gy < this.map.rows; gy++) {
+      for (let gx = 0; gx < this.map.cols; gx++) {
+        if (this.map.grid[gy][gx] === 1) {
+          mmCtx.fillRect(gx * cellW, gy * cellH, Math.ceil(cellW), Math.ceil(cellH));
+        }
+      }
+    }
+
+    // 2. Start (Green) & Exit (Gold)
+    mmCtx.fillStyle = '#00e6b4';
+    mmCtx.beginPath();
+    mmCtx.arc((this.map.startGrid[0] + 0.5) * cellW, (this.map.startGrid[1] + 0.5) * cellH, 3, 0, Math.PI * 2);
+    mmCtx.fill();
+
+    mmCtx.fillStyle = '#ffd700';
+    mmCtx.beginPath();
+    mmCtx.arc((this.map.exitGrid[0] + 0.5) * cellW, (this.map.exitGrid[1] + 0.5) * cellH, 3.5, 0, Math.PI * 2);
+    mmCtx.fill();
+
+    // 3. Uncollected treasures (Gold Blips)
+    mmCtx.fillStyle = '#ffea00';
+    this.map.treasures.forEach(tr => {
+      if (!tr.collected) {
+        mmCtx.beginPath();
+        mmCtx.arc((tr.gx + 0.5) * cellW, (tr.gy + 0.5) * cellH, 2, 0, Math.PI * 2);
+        mmCtx.fill();
+      }
+    });
+
+    // 4. Enemy Monster (Pulsing Red Blip)
+    if (this.enemy) {
+      const [egx, egy] = this.map.worldToGrid(this.enemy.x, this.enemy.y);
+      mmCtx.fillStyle = '#ff2b56';
+      mmCtx.beginPath();
+      mmCtx.arc((egx + 0.5) * cellW, (egy + 0.5) * cellH, 3.5, 0, Math.PI * 2);
+      mmCtx.fill();
+    }
+
+    // 5. Player (Cyan Blip with Pulse Ring)
+    if (this.player) {
+      const [pgx, pgy] = this.map.worldToGrid(this.player.x, this.player.y);
+      mmCtx.fillStyle = '#00f0ff';
+      mmCtx.beginPath();
+      mmCtx.arc((pgx + 0.5) * cellW, (pgy + 0.5) * cellH, 3.5, 0, Math.PI * 2);
+      mmCtx.fill();
+    }
+  }
+
 }
 
 // Start game manager when DOM is ready
