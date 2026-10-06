@@ -669,17 +669,36 @@ class GameMap {
     ctx.fillStyle = '#58b4e7';
     ctx.fillRect(0, 0, this.w, this.h);
 
-    // 2. Draw subtle corridor textures
+    // 2. Draw subtle corridor textures & high-tech floor grid patterns
     ctx.fillStyle = '#69c3f5';
     for (let gy = 0; gy < this.rows; gy++) {
       for (let gx = 0; gx < this.cols; gx++) {
         if (this.grid[gy][gx] === 0) {
+          const cx = gx * this.cellW;
+          const cy = gy * this.cellH;
+          const cw = this.cellW;
+          const ch = this.cellH;
+
+          // Main floor pad
+          ctx.fillStyle = '#69c3f5';
           ctx.beginPath();
-          ctx.roundRect(gx * this.cellW + 2, gy * this.cellH + 2, this.cellW - 4, this.cellH - 4, 4);
+          ctx.roundRect(cx + 2, cy + 2, cw - 4, ch - 4, 4);
+          ctx.fill();
+
+          // High-tech subgrid inset lines
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(cx + 4, cy + 4, cw - 8, ch - 8);
+
+          // Center navigation dot
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+          ctx.beginPath();
+          ctx.arc(cx + cw / 2, cy + ch / 2, 1.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
     }
+
 
     // 3. Draw Crisp Solid White Walls with Corner Beveling & Smooth Connectivity
     ctx.fillStyle = '#ffffff';

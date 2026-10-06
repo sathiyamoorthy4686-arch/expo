@@ -329,7 +329,7 @@ class GameMap:
 
         self.map_surface.fill(bg_color)
 
-        # Draw subtle grid path textures
+        # Draw subtle grid path textures with high-tech floor details
         for gy in range(self.rows):
             for gx in range(self.cols):
                 if self.grid[gy][gx] == 0:
@@ -337,7 +337,13 @@ class GameMap:
                     ry = int(gy * self.cell_h)
                     rw = int(self.cell_w)
                     rh = int(self.cell_h)
+                    # Floor tile
                     pygame.draw.rect(self.map_surface, path_glow, (rx + 2, ry + 2, rw - 4, rh - 4), border_radius=4)
+                    # Inset subgrid tech stroke
+                    pygame.draw.rect(self.map_surface, (120, 205, 255), (rx + 4, ry + 4, rw - 8, rh - 8), width=1)
+                    # Center micro dot
+                    pygame.draw.circle(self.map_surface, (140, 215, 255), (rx + rw // 2, ry + rh // 2), 2)
+
 
         # Draw solid white maze walls with beveled rounded corners on exterior joints
         for gy in range(self.rows):
