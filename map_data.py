@@ -355,46 +355,83 @@ class GameMap:
         pygame.draw.rect(self.map_surface, (255, 255, 255), (0, 0, self.bounds.width, self.bounds.height), width=4)
 
     def _spawn_treasures(self):
-        """Places well-balanced treasures across reachable passages."""
+        """Procedurally places well-balanced treasures across walkable passages."""
         self.treasures.clear()
-        
-        # Candidate positions on walkable tiles
-        treasure_placements = [
-            # (gx, gy, type)
-            (1, 1, 'diamond'),
-            (3, 3, 'coin'),
-            (9, 1, 'coin'),
-            (15, 3, 'diamond'),
-            (7, 5, 'chest'),
-            (13, 5, 'coin'),
-            (3, 7, 'crown'),
-            (11, 7, 'diamond'),
-            (1, 9, 'coin'),
-            (7, 9, 'chest'),
-            (15, 9, 'diamond'),
-            (3, 11, 'crown'),
-            (9, 11, 'coin'),
-            (13, 11, 'diamond'),
-            (1, 13, 'coin'),
-            (7, 13, 'crown'),
-            (15, 13, 'chest'),
-            (3, 15, 'diamond'),
-            (9, 15, 'coin')
-        ]
+        walkable_tiles = []
+        dead_ends = []
+        junctions = []
+        corridors = []
 
-        if self.level == 1:
-            # Explorer level: 8 rich treasures
-            selected = [treasure_placements[i] for i in [0, 2, 4, 6, 8, 11, 14, 16]]
-        elif self.level == 2:
-            # Adventurer level: 12 treasures
-            selected = [treasure_placements[i] for i in [0, 1, 2, 4, 5, 6, 8, 10, 11, 14, 15, 16]]
-        else:
-            # Treasure Master: 16 treasures
-            selected = treasure_placements[:16]
+        start_gx, start_gy = self.start_grid
+        exit_gx, exit_gy = self.exit_grid
+
+        # 1. Classify walkable floor tiles
+        for gy in range(1, self.rows - 1):
+            for gx in range(1, self.cols - 1):
+                if self.grid[gy][gx] == 0:
+                    d_start = math.hypot(gx - start_gx, gy - start_gy)
+                    d_exit = math.hypot(gx - exit_gx, gy - exit_gy)
+                    if d_start < 1.8 or d_exit < 1.8:
+                        continue
+
+                    neighbors = 0
+                    if self.grid[gy - 1][gx] == 0: neighbors += 1
+                    if self.grid[gy + 1][gx] == 0: neighbors += 1
+                    if self.grid[gy][gx - 1] == 0: neighbors += 1
+                    if self.grid[gy][gx + 1] == 0: neighbors += 1
+
+                    tile_info = {"gx": gx, "gy": gy, "neighbors": neighbors, "d_start": d_start, "d_exit": d_exit}
+                    walkable_tiles.append(tile_info)
+
+                    if neighbors == 1:
+                        dead_ends.append(tile_info)
+                    elif neighbors >= 3:
+                        junctions.append(tile_info)
+                    else:
+                        corridors.append(tile_info)
+
+        target_count = self.level_data.get("target_treasures", 8)
+        selected = []
+        used_keys = set()
+
+        def add_placement(tile, t_type):
+            key = (tile["gx"], tile["gy"])
+            if key not in used_keys:
+                used_keys.add(key)
+                selected.append((tile["gx"], tile["gy"], t_type))
+
+        # 2. Chests in deepest dead ends
+        dead_ends.sort(key=lambda t: t["d_start"], reverse=True)
+        for idx, de in enumerate(dead_ends):
+            if len(selected) < target_count:
+                t_type = "chest" if idx % 2 == 0 else "crown"
+                add_placement(de, t_type)
+
+        # 3. Crowns and diamonds in junctions
+        junctions.sort(key=lambda t: t["d_start"] + t["d_exit"], reverse=True)
+        for idx, junc in enumerate(junctions):
+            if len(selected) < target_count:
+                t_type = "crown" if idx % 2 == 0 else "diamond"
+                add_placement(junc, t_type)
+
+        # 4. Spaced coins and diamonds in corridors
+        corridors.sort(key=lambda t: math.sin(t["gx"] * 3.7 + t["gy"] * 5.1))
+        for idx, corr in enumerate(corridors):
+            if len(selected) < target_count:
+                too_close = any(math.hypot(s[0] - corr["gx"], s[1] - corr["gy"]) < 2.0 for s in selected)
+                if not too_close:
+                    t_type = "diamond" if idx % 3 == 0 else "coin"
+                    add_placement(corr, t_type)
+
+        # Fill remaining
+        for tile in walkable_tiles:
+            if len(selected) < target_count:
+                add_placement(tile, "coin")
 
         for gx, gy, t_type in selected:
             wx, wy = self.grid_to_world(gx, gy)
             self.treasures.append(Treasure(gx, gy, t_type, wx, wy))
+
 
     def draw(self, surface, anim_time=0.0):
         # 1. Blit pre-rendered base maze

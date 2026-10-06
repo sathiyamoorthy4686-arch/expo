@@ -448,42 +448,105 @@ class GameMap {
 
   spawnTreasures() {
     this.treasures = [];
-    const candidates = [
-      [1, 1, 'diamond'],
-      [3, 3, 'coin'],
-      [9, 1, 'coin'],
-      [15, 3, 'diamond'],
-      [7, 5, 'chest'],
-      [13, 5, 'coin'],
-      [3, 7, 'crown'],
-      [11, 7, 'diamond'],
-      [1, 9, 'coin'],
-      [7, 9, 'chest'],
-      [15, 9, 'diamond'],
-      [3, 11, 'crown'],
-      [9, 11, 'coin'],
-      [13, 11, 'diamond'],
-      [1, 13, 'coin'],
-      [7, 13, 'crown'],
-      [15, 13, 'chest'],
-      [3, 15, 'diamond'],
-      [9, 15, 'coin']
-    ];
+    const walkableTiles = [];
+    const deadEnds = [];
+    const junctions = [];
+    const corridors = [];
 
-    let selected = [];
-    if (this.level === 1) {
-      selected = [0, 2, 4, 6, 8, 11, 14, 16].map(i => candidates[i]);
-    } else if (this.level === 2) {
-      selected = [0, 1, 2, 4, 5, 6, 8, 10, 11, 14, 15, 16].map(i => candidates[i]);
-    } else {
-      selected = candidates.slice(0, 16);
+    const startGx = this.startGrid[0];
+    const startGy = this.startGrid[1];
+    const exitGx = this.exitGrid[0];
+    const exitGy = this.exitGrid[1];
+
+    // 1. Classify all walkable floor tiles
+    for (let gy = 1; gy < this.rows - 1; gy++) {
+      for (let gx = 1; gx < this.cols - 1; gx++) {
+        if (this.grid[gy][gx] === 0) {
+          // Exclude safe start zone & exit zone
+          const dStart = Math.hypot(gx - startGx, gy - startGy);
+          const dExit = Math.hypot(gx - exitGx, gy - exitGy);
+          if (dStart < 1.8 || dExit < 1.8) continue;
+
+          // Count walkable neighbors (cardinal)
+          let neighbors = 0;
+          if (this.grid[gy - 1]?.[gx] === 0) neighbors++;
+          if (this.grid[gy + 1]?.[gx] === 0) neighbors++;
+          if (this.grid[gy]?.[gx - 1] === 0) neighbors++;
+          if (this.grid[gy]?.[gx + 1] === 0) neighbors++;
+
+          const tileInfo = { gx, gy, neighbors, dStart, dExit };
+          walkableTiles.push(tileInfo);
+
+          if (neighbors === 1) {
+            deadEnds.push(tileInfo);
+          } else if (neighbors >= 3) {
+            junctions.push(tileInfo);
+          } else {
+            corridors.push(tileInfo);
+          }
+        }
+      }
     }
 
-    selected.forEach(([gx, gy, type]) => {
+    const targetCount = this.levelData?.targetTreasures || 8;
+    const selected = [];
+    const usedKeys = new Set();
+
+    const addPlacement = (tile, type) => {
+      const key = `${tile.gx},${tile.gy}`;
+      if (!usedKeys.has(key)) {
+        usedKeys.add(key);
+        selected.push({ gx: tile.gx, gy: tile.gy, type });
+      }
+    };
+
+    // 2. High-value chests in the deepest dead-ends
+    deadEnds.sort((a, b) => b.dStart - a.dStart);
+    deadEnds.forEach((de, idx) => {
+      if (selected.length < targetCount) {
+        const type = idx % 2 === 0 ? 'chest' : 'crown';
+        addPlacement(de, type);
+      }
+    });
+
+    // 3. Royal Crowns & Diamonds in key junctions
+    junctions.sort((a, b) => (b.dStart + b.dExit) - (a.dStart + a.dExit));
+    junctions.forEach((junc, idx) => {
+      if (selected.length < targetCount) {
+        const type = idx % 2 === 0 ? 'crown' : 'diamond';
+        addPlacement(junc, type);
+      }
+    });
+
+    // 4. Gold Coins & Diamonds along corridors with even spacing
+    corridors.sort((a, b) => (Math.sin(a.gx * 3.7 + a.gy * 5.1) - Math.sin(b.gx * 3.7 + b.gy * 5.1)));
+    corridors.forEach((corr, idx) => {
+      if (selected.length < targetCount) {
+        // Enforce minimal spacing between treasures
+        const tooClose = selected.some(s => Math.hypot(s.gx - corr.gx, s.gy - corr.gy) < 2.0);
+        if (!tooClose) {
+          const type = idx % 3 === 0 ? 'diamond' : 'coin';
+          addPlacement(corr, type);
+        }
+      }
+    });
+
+    // Fill remaining if needed
+    if (selected.length < targetCount) {
+      walkableTiles.forEach(tile => {
+        if (selected.length < targetCount && !usedKeys.has(`${tile.gx},${tile.gy}`)) {
+          addPlacement(tile, 'coin');
+        }
+      });
+    }
+
+    // Spawn entities
+    selected.forEach(({ gx, gy, type }) => {
       const [wx, wy] = this.gridToWorld(gx, gy);
       this.treasures.push(new Treasure(gx, gy, type, wx, wy));
     });
   }
+
 
   draw(ctx, animTime = 0) {
     // 1. Draw base sky/ocean maze
