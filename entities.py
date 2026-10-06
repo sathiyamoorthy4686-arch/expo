@@ -265,13 +265,42 @@ class Treasure:
 
         # Draw Treasure Sprite based on type
         if self.type == 'diamond':
-            # Brilliant Gem Facet
-            pts = [(px, py - 9), (px + 8, py - 2), (px, py + 9), (px - 8, py - 2)]
-            pygame.draw.polygon(surface, (0, 240, 255), pts)
-            pygame.draw.polygon(surface, (255, 255, 255), [(px, py - 9), (px + 4, py - 2), (px, py + 2), (px - 4, py - 2)])
-            pygame.draw.polygon(surface, (0, 160, 230), pts, 2)
+            scale = 1.0 + 0.08 * math.sin(self.anim_offset * 2.0)
+            dw = int(9 * scale)
+            dh = int(11 * scale)
+
+            # Outer aura
+            aura_surf = pygame.Surface((dw * 2 + 12, dh * 2 + 12), pygame.SRCALPHA)
+            pygame.draw.circle(aura_surf, (0, 240, 255, 50), (dw + 6, dh + 6), dw + 5)
+            surface.blit(aura_surf, (px - dw - 6, py - dh - 6))
+
+            # Diamond lower cone
+            cone_pts = [(px - dw, py - 2), (px, py + dh), (px + dw, py - 2)]
+            pygame.draw.polygon(surface, (0, 200, 230), cone_pts)
+
+            # Diamond upper crown table
+            table_pts = [(px - dw, py - 2), (px - int(dw * 0.5), py - int(dh * 0.7)),
+                         (px + int(dw * 0.5), py - int(dh * 0.7)), (px + dw, py - 2)]
+            pygame.draw.polygon(surface, (0, 240, 255), table_pts)
+
+            # Front center facet
+            front_pts = [(px - int(dw * 0.5), py - int(dh * 0.7)), (px + int(dw * 0.5), py - int(dh * 0.7)),
+                         (px + int(dw * 0.3), py - 2), (px, py + int(dh * 0.75)), (px - int(dw * 0.3), py - 2)]
+            pygame.draw.polygon(surface, (140, 250, 255), front_pts)
+
+            # Outline
+            all_pts = [(px - dw, py - 2), (px - int(dw * 0.5), py - int(dh * 0.7)),
+                       (px + int(dw * 0.5), py - int(dh * 0.7)), (px + dw, py - 2), (px, py + dh)]
+            pygame.draw.polygon(surface, (255, 255, 255), all_pts, 1)
+
+            # Specular gleam
+            gleam_alpha = int(180 + 75 * math.sin(self.anim_offset * 4.0))
+            gleam_surf = pygame.Surface((6, 6), pygame.SRCALPHA)
+            pygame.draw.circle(gleam_surf, (255, 255, 255, gleam_alpha), (3, 3), 2)
+            surface.blit(gleam_surf, (px - int(dw * 0.3) - 3, py - int(dh * 0.3) - 3))
 
         elif self.type == 'coin':
+
             # Gold Coin with rim & shine
             pygame.draw.circle(surface, (255, 215, 0), (px, py), 9)
             pygame.draw.circle(surface, (218, 165, 32), (px, py), 9, 2)

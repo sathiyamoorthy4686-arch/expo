@@ -283,28 +283,58 @@ class Treasure {
     ctx.fill();
 
     if (this.type === 'diamond') {
-      ctx.fillStyle = '#00f0ff';
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(px, py - 9);
-      ctx.lineTo(px + 8, py - 2);
-      ctx.lineTo(px, py + 9);
-      ctx.lineTo(px - 8, py - 2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      const scale = 1.0 + 0.08 * Math.sin(this.animOffset * 2.0);
+      const dw = 9 * scale;
+      const dh = 11 * scale;
 
-      // Top facet shine
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      // Outer cyan aura glow
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
       ctx.beginPath();
-      ctx.moveTo(px, py - 9);
-      ctx.lineTo(px + 4, py - 2);
-      ctx.lineTo(px, py + 2);
-      ctx.lineTo(px - 4, py - 2);
+      ctx.arc(px, py, dw + 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Diamond lower cone
+      ctx.fillStyle = '#00c8e6';
+      ctx.beginPath();
+      ctx.moveTo(px - dw, py - 2);
+      ctx.lineTo(px, py + dh);
+      ctx.lineTo(px + dw, py - 2);
       ctx.closePath();
       ctx.fill();
+
+      // Diamond upper table
+      ctx.fillStyle = '#00f0ff';
+      ctx.beginPath();
+      ctx.moveTo(px - dw, py - 2);
+      ctx.lineTo(px - dw * 0.5, py - dh * 0.7);
+      ctx.lineTo(px + dw * 0.5, py - dh * 0.7);
+      ctx.lineTo(px + dw, py - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front center facet
+      ctx.fillStyle = '#80faff';
+      ctx.beginPath();
+      ctx.moveTo(px - dw * 0.5, py - dh * 0.7);
+      ctx.lineTo(px + dw * 0.5, py - dh * 0.7);
+      ctx.lineTo(px + dw * 0.3, py - 2);
+      ctx.lineTo(px, py + dh * 0.75);
+      ctx.lineTo(px - dw * 0.3, py - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Specular gleam highlight
+      const gleam = (Math.sin(this.animOffset * 4.0) + 1.0) * 0.5;
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + 0.6 * gleam})`;
+      ctx.beginPath();
+      ctx.arc(px - dw * 0.3, py - dh * 0.3, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
     } else if (this.type === 'coin') {
+
       ctx.fillStyle = '#ffd700';
       ctx.strokeStyle = '#d4af37';
       ctx.lineWidth = 2;
