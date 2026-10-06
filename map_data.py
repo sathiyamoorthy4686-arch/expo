@@ -339,7 +339,7 @@ class GameMap:
                     rh = int(self.cell_h)
                     pygame.draw.rect(self.map_surface, path_glow, (rx + 2, ry + 2, rw - 4, rh - 4), border_radius=4)
 
-        # Draw solid white maze walls
+        # Draw solid white maze walls with beveled rounded corners on exterior joints
         for gy in range(self.rows):
             for gx in range(self.cols):
                 if self.grid[gy][gx] == 1:
@@ -348,8 +348,26 @@ class GameMap:
                     rw = int(math.ceil(self.cell_w))
                     rh = int(math.ceil(self.cell_h))
                     
-                    # Draw connected wall block with crisp clean edges
-                    pygame.draw.rect(self.map_surface, wall_color, (rx, ry, rw, rh))
+                    # Neighbor check
+                    n = gy > 0 and self.grid[gy - 1][gx] == 1
+                    s = gy < self.rows - 1 and self.grid[gy + 1][gx] == 1
+                    w = gx > 0 and self.grid[gy][gx - 1] == 1
+                    e = gx < self.cols - 1 and self.grid[gy][gx + 1] == 1
+
+                    r_tl = 4 if not n and not w else 0
+                    r_tr = 4 if not n and not e else 0
+                    r_br = 4 if not s and not e else 0
+                    r_bl = 4 if not s and not w else 0
+
+                    rect = pygame.Rect(rx, ry, rw, rh)
+                    pygame.draw.rect(
+                        self.map_surface, wall_color, rect,
+                        border_top_left_radius=r_tl,
+                        border_top_right_radius=r_tr,
+                        border_bottom_right_radius=r_br,
+                        border_bottom_left_radius=r_bl
+                    )
+
 
         # Soft border overlay for arcade cabinet feel
         pygame.draw.rect(self.map_surface, (255, 255, 255), (0, 0, self.bounds.width, self.bounds.height), width=4)

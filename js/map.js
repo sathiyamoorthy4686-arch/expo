@@ -681,20 +681,36 @@ class GameMap {
       }
     }
 
-    // 3. Draw Crisp Solid White Walls
+    // 3. Draw Crisp Solid White Walls with Corner Beveling & Smooth Connectivity
     ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#ffffff';
     for (let gy = 0; gy < this.rows; gy++) {
       for (let gx = 0; gx < this.cols; gx++) {
         if (this.grid[gy][gx] === 1) {
-          ctx.fillRect(
-            Math.floor(gx * this.cellW),
-            Math.floor(gy * this.cellH),
-            Math.ceil(this.cellW),
-            Math.ceil(this.cellH)
-          );
+          const rx = Math.floor(gx * this.cellW);
+          const ry = Math.floor(gy * this.cellH);
+          const rw = Math.ceil(this.cellW);
+          const rh = Math.ceil(this.cellH);
+
+          // Check cardinal wall neighbors for smooth bevel joins
+          const n = gy > 0 && this.grid[gy - 1][gx] === 1;
+          const s = gy < this.rows - 1 && this.grid[gy + 1][gx] === 1;
+          const w = gx > 0 && this.grid[gy][gx - 1] === 1;
+          const e = gx < this.cols - 1 && this.grid[gy][gx + 1] === 1;
+
+          // Corner radii: bevel exterior sharp corners
+          const rTL = (!n && !w) ? 4 : 0;
+          const rTR = (!n && !e) ? 4 : 0;
+          const rBR = (!s && !e) ? 4 : 0;
+          const rBL = (!s && !w) ? 4 : 0;
+
+          ctx.beginPath();
+          ctx.roundRect(rx, ry, rw, rh, [rTL, rTR, rBR, rBL]);
+          ctx.fill();
         }
       }
     }
+
 
     // Outer border
     ctx.strokeStyle = '#ffffff';
