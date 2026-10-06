@@ -756,18 +756,35 @@ class GameMap {
     ctx.fillText('START', sx, sy - 20);
     ctx.restore();
 
-    // 5. Draw EXIT Portal & Badge
+    // 5. Draw EXIT Portal Vortex & Badge
     const [ex, ey] = this.exitWorld;
-    const exitPulse = 180 + 75 * Math.cos(animTime * 5.0);
+    const exitPulse = 0.5 + 0.5 * Math.sin(animTime * 4.0);
     ctx.save();
-    ctx.fillStyle = `rgba(255, 215, 0, ${exitPulse / 255})`;
+
+    // Radiant outer vortex aura
+    const grad = ctx.createRadialGradient(ex, ey, 4, ex, ey, 28);
+    grad.addColorStop(0, 'rgba(255, 230, 80, 0.9)');
+    grad.addColorStop(0.5, 'rgba(255, 170, 0, 0.4)');
+    grad.addColorStop(1, 'rgba(255, 100, 0, 0)');
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(ex, ey, 18, 0, Math.PI * 2);
+    ctx.arc(ex, ey, 28, 0, Math.PI * 2);
     ctx.fill();
 
+    // Swirling vortex energy rays (4 orbital spiral arms)
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + 0.4 * exitPulse})`;
+    ctx.lineWidth = 1.8;
+    for (let i = 0; i < 4; i++) {
+      const angle = animTime * 3.0 + (i * Math.PI / 2);
+      ctx.beginPath();
+      ctx.arc(ex, ey, 14 + 4 * Math.sin(animTime * 5 + i), angle, angle + Math.PI * 0.4);
+      ctx.stroke();
+    }
+
+    // Portal Inner Core
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(ex, ey, 13, 0, Math.PI * 2);
+    ctx.arc(ex, ey, 12, 0, Math.PI * 2);
     ctx.fill();
 
     // Checkered center
@@ -778,8 +795,9 @@ class GameMap {
     ctx.fillStyle = '#ffe650';
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🏁 EXIT', ex, ey + 24);
+    ctx.fillText('🏁 EXIT', ex, ey + 26);
     ctx.restore();
+
 
     // 6. Draw Treasures
     this.treasures.forEach(tr => tr.draw(ctx));

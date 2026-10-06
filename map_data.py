@@ -474,20 +474,33 @@ class GameMap:
         s_lbl = font.render("START", True, (255, 255, 255))
         surface.blit(s_lbl, (int(sx - s_lbl.get_width() // 2), int(sy - 28)))
 
-        # 3. Draw EXIT Point Marker (Checkered radiant portal & badge)
+        # 3. Draw EXIT Point Marker (Checkered radiant portal & particle vortex)
         ex, ey = self.exit_world
         exit_pulse = int(180 + 75 * math.cos(anim_time * 5.0))
-        exit_surf = pygame.Surface((48, 48), pygame.SRCALPHA)
-        pygame.draw.circle(exit_surf, (255, 215, 0, exit_pulse), (24, 24), 18)
-        pygame.draw.circle(exit_surf, (255, 255, 255, 240), (24, 24), 13)
+        exit_surf = pygame.Surface((64, 64), pygame.SRCALPHA)
+
+        # Outer radiant vortex gradient aura
+        pygame.draw.circle(exit_surf, (255, 215, 0, exit_pulse // 3), (32, 32), 26)
+        pygame.draw.circle(exit_surf, (255, 170, 0, exit_pulse), (32, 32), 19)
+
+        # Swirling orbital vortex arc
+        for i in range(4):
+            angle = anim_time * 3.0 + (i * math.pi / 2.0)
+            arc_r = 15
+            ax = 32 + int(math.cos(angle) * arc_r)
+            ay = 32 + int(math.sin(angle) * arc_r)
+            pygame.draw.circle(exit_surf, (255, 255, 255, 200), (ax, ay), 2)
+
+        pygame.draw.circle(exit_surf, (255, 255, 255, 240), (32, 32), 13)
         # Gold checkered pattern in center
-        pygame.draw.rect(exit_surf, (255, 170, 0), (18, 18, 6, 6))
-        pygame.draw.rect(exit_surf, (255, 170, 0), (24, 24, 6, 6))
-        surface.blit(exit_surf, (int(ex - 24), int(ey - 24)))
+        pygame.draw.rect(exit_surf, (255, 170, 0), (26, 26, 6, 6))
+        pygame.draw.rect(exit_surf, (255, 170, 0), (32, 32, 6, 6))
+        surface.blit(exit_surf, (int(ex - 32), int(ey - 32)))
 
         # EXIT Label
         e_lbl = font.render("🏁 EXIT", True, (255, 230, 80))
-        surface.blit(e_lbl, (int(ex - e_lbl.get_width() // 2), int(ey + 16)))
+        surface.blit(e_lbl, (int(ex - e_lbl.get_width() // 2), int(ey + 18)))
+
 
         # 4. Draw all uncollected treasures
         for tr in self.treasures:
