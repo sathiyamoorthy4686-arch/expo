@@ -77,10 +77,25 @@ python main.py
 science expo/
 ├── main.py             # Main game loop, UI state machine, Mission HUD & Kiosk manager
 ├── cv_controller.py    # Threaded MediaPipe webcam finger tracking & virtual joystick
-├── map_data.py         # Blueprint & renderer of the authentic Blue & White maze map
-├── entities.py         # Player (Treasure Hunter), Enemy (A* Guard), and Treasures
-├── pathfinding.py      # Optimized A* (A-Star) pathfinding engine
+├── map_data.py         # Dynamic LevelLoader with 5 Multi-Level Labyrinth layouts (15x15 to 23x23)
+├── entities.py         # Player, Enemy (A* Guard), and Animated Treasure Assets
+├── pathfinding.py      # Optimized A* (A-Star) priority queue grid solver
 ├── particles.py        # Sparkles, danger smoke, portal vortex, and victory confetti
 ├── audio_synth.py      # Procedural sound effect wave synthesizer
-└── requirements.txt    # Pinned dependencies (pygame, opencv-python, mediapipe, numpy)
+├── docs/
+│   └── MAP_STANDARDS.md# Labyrinth grid matrix encoding standards & level specifications
+└── index.html          # Web edition for browser-based science expo kiosks
 ```
+
+---
+
+## 🗺️ Multi-Level Labyrinth Maps (Day 2)
+
+* **Level 1 (15x15)**: *Easy Explorer* — Spacious beginner-friendly layout with gentle turns.
+* **Level 2 (17x17)**: *Classic Expo* — Authentic Science Expo layout with balanced tactical loops.
+* **Level 3 (19x19)**: *Adventurer Pass* — Multi-path chambers with alternate routing.
+* **Level 4 (21x21)**: *Master Labyrinth* — Intricate dense maze with misleading dead-ends.
+* **Level 5 (23x23)**: *Impossible Core* — Grand championship vault challenge.
+
+For full technical specifications, see [docs/MAP_STANDARDS.md](file:///docs/MAP_STANDARDS.md).
+
