@@ -424,23 +424,54 @@ class Treasure {
       ctx.arc(px + 5.5, py + 1, 2, 0, Math.PI * 2);
       ctx.fill();
     } else if (this.type === 'chest') {
+      const bounce = Math.abs(Math.sin(this.animOffset * 2.5));
+      const squashX = 1.0 + 0.1 * (1 - bounce);
+      const squashY = 1.0 - 0.08 * (1 - bounce);
+      const cw = 11 * squashX;
+      const ch = 8 * squashY;
 
-      ctx.fillStyle = '#9c5221';
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 2;
+      // Golden aura spilling from seams
+      ctx.fillStyle = `rgba(255, 170, 0, ${0.25 + 0.15 * bounce})`;
       ctx.beginPath();
-      ctx.roundRect(px - 10, py - 7, 20, 14, 3);
+      ctx.ellipse(px, py, cw + 4, ch + 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Mahogany wooden chest lower base
+      ctx.fillStyle = '#7a3e1d';
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(px - cw, py - ch * 0.2, cw * 2, ch * 1.2, 3);
       ctx.fill();
       ctx.stroke();
 
-      // Lock
-      ctx.fillStyle = '#ffd700';
+      // Curved wooden lid
+      ctx.fillStyle = '#9c5221';
       ctx.beginPath();
-      ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+      ctx.roundRect(px - cw * 1.05, py - ch * 1.1, cw * 2.1, ch * 0.9, [4, 4, 1, 1]);
+      ctx.fill();
+      ctx.stroke();
+
+      // Gold Iron Straps / Corner Braces
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(px - cw * 0.65, py - ch * 1.1, 2.5, ch * 2.1);
+      ctx.fillRect(px + cw * 0.65 - 2.5, py - ch * 1.1, 2.5, ch * 2.1);
+
+      // Gold Lock Plate & Keyhole
+      ctx.fillStyle = '#ffe033';
+      ctx.beginPath();
+      ctx.arc(px, py + 1, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#4a2505';
+      ctx.beginPath();
+      ctx.arc(px, py + 0.5, 1.2, 0, Math.PI * 2);
+      ctx.rect(px - 0.6, py + 0.5, 1.2, 2.0);
       ctx.fill();
     }
     ctx.restore();
   }
+
 }
 
 class GameMap {

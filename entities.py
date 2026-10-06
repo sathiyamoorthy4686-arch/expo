@@ -364,11 +364,32 @@ class Treasure:
             pygame.draw.circle(surface, (0, 255, 100), (px + 6, py + 1), 2)
 
         elif self.type == 'chest':
+            bounce = abs(math.sin(self.anim_offset * 2.5))
+            squash_x = 1.0 + 0.1 * (1.0 - bounce)
+            squash_y = 1.0 - 0.08 * (1.0 - bounce)
+            cw = int(11 * squash_x)
+            ch = int(8 * squash_y)
 
-            # Wooden & Gold Trim Chest
-            rect = pygame.Rect(px - 10, py - 7, 20, 15)
-            pygame.draw.rect(surface, (140, 75, 25), rect, border_radius=3)
-            pygame.draw.rect(surface, (255, 215, 0), rect, width=2, border_radius=3)
-            # Gold lock in center
-            pygame.draw.circle(surface, (255, 220, 0), (px, py), 3)
-            pygame.draw.line(surface, (255, 215, 0), (px - 10, py - 1), (px + 10, py - 1), 2)
+            # Golden aura
+            aura_surf = pygame.Surface((cw * 2 + 10, ch * 2 + 10), pygame.SRCALPHA)
+            pygame.draw.ellipse(aura_surf, (255, 170, 0, int(50 + 40 * bounce)), (0, 0, cw * 2 + 10, ch * 2 + 10))
+            surface.blit(aura_surf, (px - cw - 5, py - ch - 5))
+
+            # Mahogany chest body
+            body_rect = pygame.Rect(px - cw, py - int(ch * 0.2), cw * 2, int(ch * 1.2))
+            pygame.draw.rect(surface, (120, 60, 25), body_rect, border_radius=3)
+            pygame.draw.rect(surface, (255, 215, 0), body_rect, width=1, border_radius=3)
+
+            # Curved lid
+            lid_rect = pygame.Rect(px - int(cw * 1.05), py - int(ch * 1.1), int(cw * 2.1), int(ch * 0.9))
+            pygame.draw.rect(surface, (155, 80, 30), lid_rect, border_radius=4)
+            pygame.draw.rect(surface, (255, 215, 0), lid_rect, width=1, border_radius=4)
+
+            # Corner straps
+            pygame.draw.line(surface, (255, 215, 0), (px - int(cw * 0.6), py - int(ch * 1.1)), (px - int(cw * 0.6), py + int(ch * 1.0)), 2)
+            pygame.draw.line(surface, (255, 215, 0), (px + int(cw * 0.6), py - int(ch * 1.1)), (px + int(cw * 0.6), py + int(ch * 1.0)), 2)
+
+            # Gold Lock
+            pygame.draw.circle(surface, (255, 220, 0), (px, py + 1), 3)
+            pygame.draw.circle(surface, (40, 20, 0), (px, py + 1), 1)
+
