@@ -726,6 +726,44 @@ body {
   text-shadow: 0 0 20px rgba(0, 255, 170, 0.8);
 }
 
+.star-rating-box {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.star-icon {
+  font-size: 36px;
+  filter: grayscale(100%) opacity(0.3);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.star-icon.earned {
+  filter: none;
+  transform: scale(1.25);
+  animation: starPop 0.5s ease-out;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.9);
+}
+
+@keyframes starPop {
+  0% { transform: scale(0.3); opacity: 0; }
+  70% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1.25); }
+}
+
+.rank-badge {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--accent-gold);
+  background: rgba(255, 210, 30, 0.15);
+  border: 1px solid rgba(255, 210, 30, 0.4);
+  padding: 4px 16px;
+  border-radius: 20px;
+  margin: 4px 0 8px;
+}
+
+
 .gameover-title {
   font-size: 28px;
   font-weight: 900;

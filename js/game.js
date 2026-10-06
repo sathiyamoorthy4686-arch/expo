@@ -593,6 +593,32 @@ class GameManager {
         this.particles.spawnConfetti(ex, ey);
         this.particles.spawnConfetti(this.canvas.width / 2, this.canvas.height / 2);
 
+        const totalTr = this.map.treasures.length;
+        const foundTr = this.map.treasures.filter(t => t.collected).length;
+        const trPct = totalTr > 0 ? foundTr / totalTr : 1.0;
+        const parTime = this.map.levelData?.parTime || 60;
+
+        // Calculate stars
+        let stars = 1;
+        if (trPct >= 0.5) stars = 2;
+        if (trPct >= 0.95 && this.gameTime <= parTime) stars = 3;
+
+        // Update star icons
+        for (let s = 1; s <= 3; s++) {
+          const starEl = document.getElementById(`star-${s}`);
+          if (starEl) {
+            if (s <= stars) {
+              starEl.classList.add('earned');
+            } else {
+              starEl.classList.remove('earned');
+            }
+          }
+        }
+
+        const rankTitles = ['NOVICE EXPLORER', 'INTREPID ADVENTURER', '🏆 MASTER OF THE LABYRINTH'];
+        const rankEl = document.getElementById('vic-rank-title');
+        if (rankEl) rankEl.textContent = rankTitles[stars - 1] || 'CHAMPION';
+
         const timeBonus = Math.max(0, Math.floor(300 - this.gameTime * 4));
         const finalScore = this.score + timeBonus;
 
@@ -604,6 +630,7 @@ class GameManager {
         this.showScreen(STATE_VICTORY);
       }
     } else if (this.state === STATE_VICTORY || this.state === STATE_GAMEOVER) {
+
       // Complete freeze during modals
       if (this.player) this.player.stop();
       if (this.enemy) this.enemy.stop();
