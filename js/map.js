@@ -372,28 +372,59 @@ class Treasure {
         ctx.fillText('$', px, py);
       }
     } else if (this.type === 'crown') {
+      const crownW = 11;
+      const crownH = 8;
+      const crownGlow = 0.5 + 0.5 * Math.sin(this.animOffset * 3.5);
 
+      // Velvet cushion & back aura
+      ctx.fillStyle = `rgba(255, 80, 200, ${0.2 + 0.2 * crownGlow})`;
+      ctx.beginPath();
+      ctx.ellipse(px, py, crownW + 4, crownH + 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Golden Crown body with 5 peaks
       ctx.fillStyle = '#ffd700';
       ctx.strokeStyle = '#b8860b';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(px - 9, py + 5);
-      ctx.lineTo(px - 8, py - 4);
-      ctx.lineTo(px - 3, py - 1);
-      ctx.lineTo(px, py - 7);
-      ctx.lineTo(px + 3, py - 1);
-      ctx.lineTo(px + 8, py - 4);
-      ctx.lineTo(px + 9, py + 5);
+      ctx.moveTo(px - crownW, py + crownH * 0.7);
+      ctx.lineTo(px - crownW * 0.9, py - crownH * 0.4);
+      ctx.lineTo(px - crownW * 0.4, py - crownH * 0.1);
+      ctx.lineTo(px, py - crownH);
+      ctx.lineTo(px + crownW * 0.4, py - crownH * 0.1);
+      ctx.lineTo(px + crownW * 0.9, py - crownH * 0.4);
+      ctx.lineTo(px + crownW, py + crownH * 0.7);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      // Jewels
-      ctx.fillStyle = '#ff2b56';
+      // Royal baseline headband
+      ctx.fillStyle = '#b8860b';
       ctx.beginPath();
-      ctx.arc(px, py - 2, 2, 0, Math.PI * 2);
+      ctx.roundRect(px - crownW, py + crownH * 0.4, crownW * 2, crownH * 0.35, 2);
+      ctx.fill();
+
+      // Glowing Center Ruby Gem
+      ctx.fillStyle = `rgb(255, ${Math.floor(30 + 40 * crownGlow)}, 80)`;
+      ctx.beginPath();
+      ctx.arc(px, py - crownH * 0.35, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // Left Sapphire & Right Emerald
+      ctx.fillStyle = '#00e5ff';
+      ctx.beginPath();
+      ctx.arc(px - 5.5, py + 1, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#00ff66';
+      ctx.beginPath();
+      ctx.arc(px + 5.5, py + 1, 2, 0, Math.PI * 2);
       ctx.fill();
     } else if (this.type === 'chest') {
+
       ctx.fillStyle = '#9c5221';
       ctx.strokeStyle = '#ffd700';
       ctx.lineWidth = 2;

@@ -328,21 +328,43 @@ class Treasure:
                 surface.blit(s_txt, (px - s_txt.get_width() // 2, py - s_txt.get_height() // 2))
 
         elif self.type == 'crown':
+            crown_w = 11
+            crown_h = 8
+            crown_glow = 0.5 + 0.5 * math.sin(self.anim_offset * 3.5)
 
-            # Royal Crown
+            # Velvet cushion & aura
+            aura_surf = pygame.Surface((crown_w * 2 + 10, crown_h * 2 + 8), pygame.SRCALPHA)
+            pygame.draw.ellipse(aura_surf, (255, 80, 200, int(40 + 40 * crown_glow)), (0, 0, crown_w * 2 + 10, crown_h * 2 + 8))
+            surface.blit(aura_surf, (px - crown_w - 5, py - crown_h - 4))
+
+            # Golden Crown Peaks
             pts = [
-                (px - 10, py + 5), (px - 9, py - 4), (px - 4, py - 1),
-                (px, py - 7), (px + 4, py - 1), (px + 9, py - 4),
-                (px + 10, py + 5)
+                (px - crown_w, py + int(crown_h * 0.7)),
+                (px - int(crown_w * 0.9), py - int(crown_h * 0.4)),
+                (px - int(crown_w * 0.4), py - int(crown_h * 0.1)),
+                (px, py - crown_h),
+                (px + int(crown_w * 0.4), py - int(crown_h * 0.1)),
+                (px + int(crown_w * 0.9), py - int(crown_h * 0.4)),
+                (px + crown_w, py + int(crown_h * 0.7))
             ]
             pygame.draw.polygon(surface, (255, 215, 0), pts)
-            pygame.draw.polygon(surface, (200, 140, 0), pts, 2)
-            # Ruby & Emerald jewels
-            pygame.draw.circle(surface, (255, 40, 40), (px, py - 3), 2)
-            pygame.draw.circle(surface, (40, 255, 80), (px - 5, py + 1), 2)
-            pygame.draw.circle(surface, (40, 180, 255), (px + 5, py + 1), 2)
+            pygame.draw.polygon(surface, (184, 134, 11), pts, 2)
+
+            # Headband
+            band_rect = pygame.Rect(px - crown_w, py + int(crown_h * 0.3), crown_w * 2, int(crown_h * 0.4))
+            pygame.draw.rect(surface, (184, 134, 11), band_rect, border_radius=2)
+
+            # Center Ruby Gem
+            ruby_glow = int(180 + 75 * crown_glow)
+            pygame.draw.circle(surface, (255, 30, ruby_glow // 3), (px, py - int(crown_h * 0.35)), 3)
+            pygame.draw.circle(surface, (255, 255, 255), (px, py - int(crown_h * 0.35)), 3, 1)
+
+            # Left Sapphire & Right Emerald
+            pygame.draw.circle(surface, (0, 220, 255), (px - 6, py + 1), 2)
+            pygame.draw.circle(surface, (0, 255, 100), (px + 6, py + 1), 2)
 
         elif self.type == 'chest':
+
             # Wooden & Gold Trim Chest
             rect = pygame.Rect(px - 10, py - 7, 20, 15)
             pygame.draw.rect(surface, (140, 75, 25), rect, border_radius=3)
