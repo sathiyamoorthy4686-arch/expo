@@ -363,30 +363,41 @@ class GameMap {
     this.w = canvasWidth;
     this.h = canvasHeight;
     this.level = level;
-    this.cols = 17;
-    this.rows = 17;
-    this.grid = ORIGINAL_MAZE.map(row => [...row]);
+    
+    // Load dynamic level configuration from LevelLoader
+    const levelData = window.levelLoader ? window.levelLoader.getLevel(level) : null;
+    if (levelData) {
+      this.levelData = levelData;
+      this.cols = levelData.cols;
+      this.rows = levelData.rows;
+      this.grid = levelData.grid.map(row => [...row]);
+      this.startGrid = [...levelData.startGrid];
+      this.exitGrid = [...levelData.exitGrid];
+      this.enemySpawnGrid = [...levelData.enemySpawnGrid];
+      this.theme = levelData.theme;
+      this.enemySpeed = levelData.enemySpeed;
+      this.enemyGracePeriod = levelData.enemyGracePeriod;
+    } else {
+      this.cols = 17;
+      this.rows = 17;
+      this.grid = [];
+      this.startGrid = [4, 0];
+      this.exitGrid = [12, 16];
+      this.enemySpawnGrid = [15, 1];
+    }
+
     this.cellW = this.w / this.cols;
     this.cellH = this.h / this.rows;
 
-    this.startGrid = [4, 0];
-    this.exitGrid = [12, 16];
-
-    this.startWorld = this.gridToWorld(4, 0.4);
-    this.exitWorld = this.gridToWorld(12, 15.6);
-
-    if (level === 1) {
-      this.enemySpawnGrid = [15, 1];
-    } else if (level === 2) {
-      this.enemySpawnGrid = [1, 15];
-    } else {
-      this.enemySpawnGrid = [15, 7];
-    }
+    // Dynamically calculate world coordinates for customizable start and exit portals
+    this.startWorld = this.gridToWorld(this.startGrid[0], this.startGrid[1] === 0 ? 0.45 : this.startGrid[1] + 0.5);
+    this.exitWorld = this.gridToWorld(this.exitGrid[0], this.exitGrid[1] === this.rows - 1 ? this.rows - 0.55 : this.exitGrid[1] + 0.5);
     this.enemySpawnWorld = this.gridToWorld(...this.enemySpawnGrid);
 
     this.treasures = [];
     this.spawnTreasures();
   }
+
 
   gridToWorld(gx, gy) {
     return [

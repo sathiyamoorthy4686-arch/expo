@@ -239,37 +239,40 @@ class GameMap:
         """
         self.bounds = rect_bounds
         self.level = level
-        self.cols = 17
-        self.rows = 17
-        self.grid = [row[:] for row in ORIGINAL_MAZE]
+        
+        # Load level from level_loader
+        level_data = level_loader.get_level(level)
+        self.level_data = level_data
+        self.cols = level_data["cols"]
+        self.rows = level_data["rows"]
+        self.grid = [row[:] for row in level_data["grid"]]
         self.cell_w = self.bounds.width / self.cols
         self.cell_h = self.bounds.height / self.rows
 
         # Start & Exit positions
-        self.start_grid = (4, 0)
-        self.exit_grid = (12, 16)
+        self.start_grid = level_data["start_grid"]
+        self.exit_grid = level_data["exit_grid"]
 
         # Pre-calculate world positions
-        self.start_world = self.grid_to_world(4, 0.4)
-        self.exit_world = self.grid_to_world(12, 15.6)
+        start_gy_offset = 0.45 if self.start_grid[1] == 0 else self.start_grid[1] + 0.5
+        exit_gy_offset = self.rows - 0.55 if self.exit_grid[1] == self.rows - 1 else self.exit_grid[1] + 0.5
+        self.start_world = self.grid_to_world(self.start_grid[0], start_gy_offset)
+        self.exit_world = self.grid_to_world(self.exit_grid[0], exit_gy_offset)
 
-        # Enemy spawn location (far corner for fairness)
-        if level == 1:
-            self.enemy_spawn_grid = (15, 1)
-        elif level == 2:
-            self.enemy_spawn_grid = (1, 15)
-        else:
-            self.enemy_spawn_grid = (15, 7)
-
+        # Enemy spawn location
+        self.enemy_spawn_grid = level_data["enemy_spawn_grid"]
         self.enemy_spawn_world = self.grid_to_world(*self.enemy_spawn_grid)
+        self.enemy_speed = level_data["enemy_speed"]
+        self.enemy_grace_period = level_data["enemy_grace_period"]
 
-        # Pre-render static background map surface for ultra-fast 60 FPS rendering
+        # Pre-render static background map surface
         self.map_surface = pygame.Surface((self.bounds.width, self.bounds.height))
         self._render_base_map()
 
         # Generate treasures for this level
         self.treasures = []
         self._spawn_treasures()
+
 
     def grid_to_world(self, gx, gy):
         wx = self.bounds.left + (gx + 0.5) * self.cell_w
