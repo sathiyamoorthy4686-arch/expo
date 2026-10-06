@@ -1,33 +1,57 @@
 """
-Map Data and Renderer for AI Treasure Escape.
-Faithfully reproduces the user's provided Blue & White Treasure Maze Map.
+LevelLoader & Dynamic Map Registry for AI Treasure Escape.
+Supports multi-level grid layouts, customizable themes, and game balance parameters.
 """
 
 import math
 import pygame
 from entities import Treasure
 
-# 1 = Wall, 0 = Walkable Path
-# 17x17 grid matching the user's provided labyrinth structure
-ORIGINAL_MAZE = [
-    [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], # 0: Entrance at (4,0)
-    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1], # 1
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1], # 2
-    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1], # 3
-    [1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1], # 4
-    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1], # 5
-    [1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], # 6
-    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1], # 7
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1], # 8
-    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1], # 9
-    [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1], # 10
-    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1], # 11
-    [1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], # 12
-    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1], # 13
-    [1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1], # 14
-    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1], # 15
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1]  # 16: Exit at (12,16)
-]
+class LevelLoader:
+    def __init__(self):
+        self.levels = {}
+
+    def register_level(self, level_idx, level_def):
+        grid = [row[:] for row in level_def["grid"]]
+        cols = len(grid[0])
+        rows = len(grid)
+        self.levels[level_idx] = {
+            "id": level_idx,
+            "name": level_def.get("name", f"Level {level_idx}"),
+            "subtitle": level_def.get("subtitle", "Labyrinth Adventure"),
+            "cols": cols,
+            "rows": rows,
+            "grid": grid,
+            "start_grid": level_def.get("start_grid", (1, 0)),
+            "exit_grid": level_def.get("exit_grid", (cols - 2, rows - 1)),
+            "enemy_spawn_grid": level_def.get("enemy_spawn_grid", (cols - 2, 1)),
+            "enemy_speed": level_def.get("enemy_speed", 55.0),
+            "enemy_grace_period": level_def.get("enemy_grace_period", 3.5),
+            "par_time": level_def.get("par_time", 60),
+            "target_treasures": level_def.get("target_treasures", 8),
+            "difficulty": level_def.get("difficulty", "Normal"),
+            "theme": level_def.get("theme", {
+                "bg": (88, 180, 231),
+                "corridor": (105, 195, 245),
+                "wall": (255, 255, 255),
+                "border": (255, 255, 255),
+                "accent": (0, 240, 255)
+            })
+        }
+
+    def get_level(self, level_idx):
+        if level_idx in self.levels:
+            return self.levels[level_idx]
+        return self.levels.get(1, next(iter(self.levels.values())) if self.levels else None)
+
+    def get_all_levels(self):
+        return list(self.levels.values())
+
+    def get_level_count(self):
+        return len(self.levels)
+
+level_loader = LevelLoader()
+
 
 class GameMap:
     def __init__(self, rect_bounds, level=1):

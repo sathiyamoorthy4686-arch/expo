@@ -1,27 +1,57 @@
 /**
- * Labyrinth Map & World Coordinates for AI Treasure Escape
+ * LevelLoader & Dynamic Map Registry for AI Treasure Escape
  */
+class LevelLoader {
+  constructor() {
+    this.levels = new Map();
+  }
 
-// 17x17 Authentic Science Expo Blue & White Labyrinth Layout
-const ORIGINAL_MAZE = [
-  [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0: Entrance at (4,0)
-  [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1], // 1
-  [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1], // 2
-  [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1], // 3
-  [1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1], // 4
-  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1], // 5
-  [1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], // 6
-  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1], // 7
-  [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1], // 8
-  [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1], // 9
-  [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1], // 10
-  [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1], // 11
-  [1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], // 12
-  [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1], // 13
-  [1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1], // 14
-  [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1], // 15
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1]  // 16: Exit at (12,16)
-];
+  registerLevel(levelIndex, levelDef) {
+    this.levels.set(levelIndex, {
+      id: levelIndex,
+      name: levelDef.name || `Level ${levelIndex}`,
+      subtitle: levelDef.subtitle || 'Labyrinth Adventure',
+      cols: levelDef.grid[0].length,
+      rows: levelDef.grid.length,
+      grid: levelDef.grid.map(row => [...row]),
+      startGrid: levelDef.startGrid || [1, 0],
+      exitGrid: levelDef.exitGrid || [levelDef.grid[0].length - 2, levelDef.grid.length - 1],
+      enemySpawnGrid: levelDef.enemySpawnGrid || [levelDef.grid[0].length - 2, 1],
+      enemySpeed: levelDef.enemySpeed || 55.0,
+      enemyGracePeriod: levelDef.enemyGracePeriod || 3.5,
+      parTime: levelDef.parTime || 60,
+      targetTreasures: levelDef.targetTreasures || 8,
+      difficulty: levelDef.difficulty || 'Normal',
+      theme: levelDef.theme || {
+        bg: '#58b4e7',
+        corridor: '#69c3f5',
+        wall: '#ffffff',
+        border: '#ffffff',
+        accent: '#00f0ff'
+      }
+    });
+  }
+
+  getLevel(levelIndex) {
+    if (this.levels.has(levelIndex)) {
+      return this.levels.get(levelIndex);
+    }
+    // Fallback to level 1 or first available
+    return this.levels.get(1) || Array.from(this.levels.values())[0];
+  }
+
+  getAllLevels() {
+    return Array.from(this.levels.values());
+  }
+
+  getLevelCount() {
+    return this.levels.size;
+  }
+}
+
+const levelLoader = new LevelLoader();
+window.levelLoader = levelLoader;
+
 
 class Treasure {
   constructor(gx, gy, type, wx, wy) {
