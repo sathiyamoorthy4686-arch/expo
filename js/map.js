@@ -736,25 +736,49 @@ class GameMap {
     ctx.lineWidth = 4;
     ctx.strokeRect(0, 0, this.w, this.h);
 
-    // 4. Draw START Portal & Badge
+    // 4. Draw START Safe-Zone Perimeter & Badge
     const [sx, sy] = this.startWorld;
-    const startPulse = 180 + 75 * Math.sin(animTime * 5.0);
+    const startPulse = 0.5 + 0.5 * Math.sin(animTime * 4.5);
     ctx.save();
-    ctx.fillStyle = `rgba(255, 255, 255, ${startPulse / 255})`;
+
+    // Safe-house boundary perimeter ring (protective shield)
+    ctx.strokeStyle = `rgba(0, 230, 180, ${0.35 + 0.3 * startPulse})`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
     ctx.beginPath();
-    ctx.arc(sx, sy, 16, 0, Math.PI * 2);
+    ctx.arc(sx, sy, 26, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Safe zone ambient glow
+    ctx.fillStyle = `rgba(0, 230, 180, ${0.12 + 0.1 * startPulse})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 26, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Start portal glowing core
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + 0.3 * startPulse})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 15, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#00e6b4';
     ctx.beginPath();
-    ctx.arc(sx, sy, 11, 0, Math.PI * 2);
+    ctx.arc(sx, sy, 10, 0, Math.PI * 2);
     ctx.fill();
+
+    // Safe Zone Label
+    ctx.fillStyle = '#a0ffe6';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SAFE ZONE', sx, sy + 22);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('START', sx, sy - 20);
+    ctx.fillText('START', sx, sy - 18);
     ctx.restore();
+
 
     // 5. Draw EXIT Portal Vortex & Badge
     const [ex, ey] = this.exitWorld;

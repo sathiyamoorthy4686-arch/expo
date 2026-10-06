@@ -461,18 +461,29 @@ class GameMap:
         # 1. Blit pre-rendered base maze
         surface.blit(self.map_surface, (self.bounds.left, self.bounds.top))
 
-        # 2. Draw START Point Marker (Glowing white circle & badge)
+        # 2. Draw START Point Marker (Glowing safe-zone perimeter & badge)
         sx, sy = self.start_world
         start_glow = int(180 + 75 * math.sin(anim_time * 5.0))
-        glow_surf = pygame.Surface((44, 44), pygame.SRCALPHA)
-        pygame.draw.circle(glow_surf, (255, 255, 255, start_glow), (22, 22), 16)
-        pygame.draw.circle(glow_surf, (0, 230, 180, 220), (22, 22), 11)
-        surface.blit(glow_surf, (int(sx - 22), int(sy - 22)))
+        glow_surf = pygame.Surface((60, 60), pygame.SRCALPHA)
+
+        # Safe-zone boundary ring
+        pygame.draw.circle(glow_surf, (0, 230, 180, 50), (30, 30), 26)
+        pygame.draw.circle(glow_surf, (0, 230, 180, int(start_glow * 0.7)), (30, 30), 26, 1)
+
+        # Inner portal core
+        pygame.draw.circle(glow_surf, (255, 255, 255, start_glow), (30, 30), 15)
+        pygame.draw.circle(glow_surf, (0, 230, 180, 220), (30, 30), 10)
+        surface.blit(glow_surf, (int(sx - 30), int(sy - 30)))
         
-        # START Label
+        # START & SAFE ZONE Labels
         font = pygame.font.SysFont('Arial', 12, bold=True)
         s_lbl = font.render("START", True, (255, 255, 255))
         surface.blit(s_lbl, (int(sx - s_lbl.get_width() // 2), int(sy - 28)))
+
+        sub_font = pygame.font.SysFont('Arial', 9, bold=True)
+        sz_lbl = sub_font.render("SAFE ZONE", True, (160, 255, 230))
+        surface.blit(sz_lbl, (int(sx - sz_lbl.get_width() // 2), int(sy + 18)))
+
 
         # 3. Draw EXIT Point Marker (Checkered radiant portal & particle vortex)
         ex, ey = self.exit_world
