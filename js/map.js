@@ -52,6 +52,37 @@ class LevelLoader {
 const levelLoader = new LevelLoader();
 window.levelLoader = levelLoader;
 
+// Level 1: Easy Explorer (15x15) - Spacious beginner-friendly layout with gentle turns
+levelLoader.registerLevel(1, {
+  name: 'Easy Explorer',
+  subtitle: 'Stage 1: Sunlit Corridors',
+  difficulty: 'Easy',
+  enemySpeed: 45.0,
+  enemyGracePeriod: 4.0,
+  parTime: 45,
+  targetTreasures: 6,
+  startGrid: [2, 0],
+  exitGrid: [12, 14],
+  enemySpawnGrid: [13, 1],
+  grid: [
+    [1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0: Start at (2,0)
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1], // 1
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1], // 2
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1], // 3
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1], // 4
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1], // 5
+    [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1], // 6
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1], // 7
+    [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1], // 8
+    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1], // 9
+    [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1], // 10
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 11
+    [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1], // 12
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 13
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1]  // 14: Exit at (12,14)
+  ]
+});
+
 
 class Treasure {
   constructor(gx, gy, type, wx, wy) {
