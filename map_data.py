@@ -287,38 +287,44 @@ class GameMap:
         return gx, gy
 
     def check_collision(self, wx, wy, radius):
-        """Check circle vs map walls collision."""
-        # Convert circle bounding box to grid coordinates
-        min_gx = int((wx - radius - self.bounds.left) / self.cell_w)
-        max_gx = int((wx + radius - self.bounds.left) / self.cell_w)
-        min_gy = int((wy - radius - self.bounds.top) / self.cell_h)
-        max_gy = int((wy + radius - self.bounds.top) / self.cell_h)
+        """Check circle vs map walls collision with optimized spatial AABB lookups."""
+        inv_cw = 1.0 / self.cell_w
+        inv_ch = 1.0 / self.cell_h
 
-        # Check against outer bounds
+        min_gx = max(0, int((wx - radius - self.bounds.left) * inv_cw))
+        max_gx = min(self.cols - 1, int((wx + radius - self.bounds.left) * inv_cw))
+        min_gy = max(0, int((wy - radius - self.bounds.top) * inv_ch))
+        max_gy = min(self.rows - 1, int((wy + radius - self.bounds.top) * inv_ch))
+
+        # Outer bounds check
         if wx - radius < self.bounds.left or wx + radius > self.bounds.right:
             return True
-        if wy - radius < self.bounds.top and not (min_gx <= self.start_grid[0] <= max_gx):
+        if wy - radius < self.bounds.top and not (min_gx <= self.start_grid[0] <= max_gx and self.start_grid[1] == 0):
             return True
-        if wy + radius > self.bounds.bottom and not (min_gx <= self.exit_grid[0] <= max_gx):
+        if wy + radius > self.bounds.bottom and not (min_gx <= self.exit_grid[0] <= max_gx and self.exit_grid[1] == self.rows - 1):
             return True
 
-        for gy in range(max(0, min_gy), min(self.rows, max_gy + 1)):
-            for gx in range(max(0, min_gx), min(self.cols, max_gx + 1)):
-                if self.grid[gy][gx] == 1:
-                    # Wall rectangle in world coordinates
+        eff_radius_sq = (radius * 0.90) ** 2
+
+        for gy in range(min_gy, max_gy + 1):
+            row = self.grid[gy]
+            ry = self.bounds.top + gy * self.cell_h
+            ry2 = ry + self.cell_h
+
+            for gx in range(min_gx, max_gx + 1):
+                if row[gx] == 1:
                     rx = self.bounds.left + gx * self.cell_w
-                    ry = self.bounds.top + gy * self.cell_h
-                    rw = self.cell_w
-                    rh = self.cell_h
+                    rx2 = rx + self.cell_w
 
-                    # Closest point on rectangle to circle
-                    cx = max(rx, min(wx, rx + rw))
-                    cy = max(ry, min(wy, ry + rh))
+                    cx = rx if wx < rx else (rx2 if wx > rx2 else wx)
+                    cy = ry if wy < ry else (ry2 if wy > ry2 else wy)
 
-                    dist_sq = (wx - cx) ** 2 + (wy - cy) ** 2
-                    if dist_sq < (radius * 0.92) ** 2:
+                    dx = wx - cx
+                    dy = wy - cy
+                    if dx * dx + dy * dy < eff_radius_sq:
                         return True
         return False
+
 
     def _render_base_map(self):
         """Renders the crisp vibrant blue & white maze artwork."""

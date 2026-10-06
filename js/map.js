@@ -531,29 +531,44 @@ class GameMap {
   }
 
   checkCollision(wx, wy, radius) {
-    const minGx = Math.floor((wx - radius) / this.cellW);
-    const maxGx = Math.floor((wx + radius) / this.cellW);
-    const minGy = Math.floor((wy - radius) / this.cellH);
-    const maxGy = Math.floor((wy + radius) / this.cellH);
+    const invCellW = 1.0 / this.cellW;
+    const invCellH = 1.0 / this.cellH;
 
-    // Bounds check
+    const minGx = Math.max(0, Math.floor((wx - radius) * invCellW));
+    const maxGx = Math.min(this.cols - 1, Math.floor((wx + radius) * invCellW));
+    const minGy = Math.max(0, Math.floor((wy - radius) * invCellH));
+    const maxGy = Math.min(this.rows - 1, Math.floor((wy + radius) * invCellH));
+
+    // Fast boundary check with portal entrance allowances
     if (wx - radius < 0 || wx + radius > this.w) return true;
-    if (wy - radius < 0 && !(minGx <= this.startGrid[0] && this.startGrid[0] <= maxGx)) return true;
-    if (wy + radius > this.h && !(minGx <= this.exitGrid[0] && this.exitGrid[0] <= maxGx)) return true;
+    if (wy - radius < 0) {
+      if (!(minGx <= this.startGrid[0] && this.startGrid[0] <= maxGx && this.startGrid[1] === 0)) return true;
+    }
+    if (wy + radius > this.h) {
+      if (!(minGx <= this.exitGrid[0] && this.exitGrid[0] <= maxGx && this.exitGrid[1] === this.rows - 1)) return true;
+    }
 
-    for (let gy = Math.max(0, minGy); gy <= Math.min(this.rows - 1, maxGy); gy++) {
-      for (let gx = Math.max(0, minGx); gx <= Math.min(this.cols - 1, maxGx); gx++) {
-        if (this.grid[gy][gx] === 1) {
+    const effectiveRadiusSq = (radius * 0.90) ** 2;
+
+    // Spatial grid AABB intersection
+    for (let gy = minGy; gy <= maxGy; gy++) {
+      const row = this.grid[gy];
+      const ry = gy * this.cellH;
+      const ry2 = ry + this.cellH;
+
+      for (let gx = minGx; gx <= maxGx; gx++) {
+        if (row[gx] === 1) {
           const rx = gx * this.cellW;
-          const ry = gy * this.cellH;
-          const rw = this.cellW;
-          const rh = this.cellH;
+          const rx2 = rx + this.cellW;
 
-          const cx = Math.max(rx, Math.min(wx, rx + rw));
-          const cy = Math.max(ry, Math.min(wy, ry + rh));
+          // Closest point on wall AABB
+          const cx = wx < rx ? rx : (wx > rx2 ? rx2 : wx);
+          const cy = wy < ry ? ry : (wy > ry2 ? ry2 : wy);
 
-          const distSq = (wx - cx) ** 2 + (wy - cy) ** 2;
-          if (distSq < (radius * 0.92) ** 2) {
+          const dx = wx - cx;
+          const dy = wy - cy;
+
+          if (dx * dx + dy * dy < effectiveRadiusSq) {
             return true;
           }
         }
@@ -561,6 +576,7 @@ class GameMap {
     }
     return false;
   }
+
 
   spawnTreasures() {
     this.treasures = [];
