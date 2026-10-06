@@ -334,21 +334,45 @@ class Treasure {
       ctx.lineWidth = 1.2;
       ctx.stroke();
     } else if (this.type === 'coin') {
+      const rotFactor = Math.cos(this.animOffset * 2.8);
+      const coinWidth = Math.max(2.5, Math.abs(rotFactor) * 9.5);
+      const coinHeight = 9.5;
 
-      ctx.fillStyle = '#ffd700';
-      ctx.strokeStyle = '#d4af37';
-      ctx.lineWidth = 2;
+      // Drop gold shine halo
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
       ctx.beginPath();
-      ctx.arc(px, py, 9, 0, Math.PI * 2);
+      ctx.ellipse(px, py, coinWidth + 3, coinHeight + 3, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
 
-      ctx.fillStyle = '#b8860b';
-      ctx.font = 'bold 10px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('$', px, py);
+      // Outer gold rim
+      ctx.fillStyle = rotFactor >= 0 ? '#d4af37' : '#b8860b';
+      ctx.beginPath();
+      ctx.ellipse(px, py, coinWidth, coinHeight, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner shiny face
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.ellipse(px, py, Math.max(1, coinWidth - 1.8), coinHeight - 1.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Light streak
+      const streakX = px + Math.sin(this.animOffset * 2.8) * (coinWidth * 0.4);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.ellipse(streakX, py, Math.max(0.5, coinWidth * 0.25), coinHeight * 0.75, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Engraved currency symbol if face is wide enough
+      if (coinWidth > 4.5) {
+        ctx.fillStyle = '#996515';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('$', px, py);
+      }
     } else if (this.type === 'crown') {
+
       ctx.fillStyle = '#ffd700';
       ctx.strokeStyle = '#b8860b';
       ctx.lineWidth = 1.5;

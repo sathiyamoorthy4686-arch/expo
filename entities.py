@@ -300,17 +300,35 @@ class Treasure:
             surface.blit(gleam_surf, (px - int(dw * 0.3) - 3, py - int(dh * 0.3) - 3))
 
         elif self.type == 'coin':
+            rot_factor = math.cos(self.anim_offset * 2.8)
+            coin_w = max(3, int(abs(rot_factor) * 9.5))
+            coin_h = 9
 
-            # Gold Coin with rim & shine
-            pygame.draw.circle(surface, (255, 215, 0), (px, py), 9)
-            pygame.draw.circle(surface, (218, 165, 32), (px, py), 9, 2)
-            pygame.draw.circle(surface, (255, 245, 150), (px - 2, py - 2), 5)
+            # Drop gold glow halo
+            halo_surf = pygame.Surface((coin_w * 2 + 10, coin_h * 2 + 10), pygame.SRCALPHA)
+            pygame.draw.ellipse(halo_surf, (255, 215, 0, 45), (0, 0, coin_w * 2 + 10, coin_h * 2 + 10))
+            surface.blit(halo_surf, (px - coin_w - 5, py - coin_h - 5))
+
+            # Outer rim
+            rim_color = (218, 165, 32) if rot_factor >= 0 else (184, 134, 11)
+            pygame.draw.ellipse(surface, rim_color, (px - coin_w, py - coin_h, coin_w * 2, coin_h * 2))
+
+            # Inner face
+            pygame.draw.ellipse(surface, (255, 215, 0), (px - max(1, coin_w - 2), py - coin_h + 2, max(2, (coin_w - 2) * 2), (coin_h - 2) * 2))
+
+            # Specular shine
+            shine_surf = pygame.Surface((max(2, int(coin_w * 0.6)), coin_h), pygame.SRCALPHA)
+            pygame.draw.ellipse(shine_surf, (255, 255, 255, 150), (0, 0, max(2, int(coin_w * 0.6)), coin_h))
+            surface.blit(shine_surf, (px - max(1, int(coin_w * 0.3)), py - coin_h // 2))
+
             # $ symbol
-            font = pygame.font.SysFont('Arial', 11, bold=True)
-            s_txt = font.render("$", True, (160, 100, 0))
-            surface.blit(s_txt, (px - s_txt.get_width() // 2, py - s_txt.get_height() // 2))
+            if coin_w > 4:
+                font = pygame.font.SysFont('Arial', 10, bold=True)
+                s_txt = font.render("$", True, (150, 90, 0))
+                surface.blit(s_txt, (px - s_txt.get_width() // 2, py - s_txt.get_height() // 2))
 
         elif self.type == 'crown':
+
             # Royal Crown
             pts = [
                 (px - 10, py + 5), (px - 9, py - 4), (px - 4, py - 1),
