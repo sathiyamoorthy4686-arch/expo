@@ -61,20 +61,22 @@ class Particle {
 }
 
 class FloatingText {
-  constructor(x, y, text, color = '#ffd700', fontSize = 18, lifetime = 1.2) {
+  constructor(x, y, text, color = '#ffd700', fontSize = 18, lifetime = 1.3) {
     this.x = x;
     this.y = y;
+    this.startY = y;
     this.text = text;
     this.color = color;
     this.fontSize = fontSize;
     this.lifetime = lifetime;
     this.life = lifetime;
-    this.vy = -35.0;
+    this.vy = -38.0;
   }
 
   update(dt) {
     this.life -= dt;
     this.y += this.vy * dt;
+    this.vy *= 0.96; // Gentle decelerating float
   }
 
   get isAlive() {
@@ -83,21 +85,35 @@ class FloatingText {
 
   draw(ctx) {
     if (this.life <= 0) return;
+    const progress = 1.0 - (this.life / this.lifetime);
     const alpha = Math.max(0, this.life / this.lifetime);
+    
+    // Scale pop animation: springs up fast, then floats gently
+    const scale = progress < 0.2 ? 0.7 + (progress / 0.2) * 0.45 : Math.max(0.9, 1.15 - progress * 0.25);
+    const size = Math.round(this.fontSize * scale);
+
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.font = `bold ${this.fontSize}px 'Outfit', sans-serif`;
+    ctx.font = `900 ${size}px 'Outfit', sans-serif`;
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-    // Shadow
-    ctx.fillStyle = '#000000';
-    ctx.fillText(this.text, this.x + 2, this.y + 2);
+    // Outer glow aura
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 4;
+    ctx.strokeText(this.text, this.x, this.y);
 
     ctx.fillStyle = this.color;
     ctx.fillText(this.text, this.x, this.y);
+
+    // White shine core
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillText(this.text, this.x, this.y - 1);
+
     ctx.restore();
   }
 }
+
 
 class ParticleSystem {
   constructor() {

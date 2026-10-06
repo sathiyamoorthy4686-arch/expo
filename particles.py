@@ -69,7 +69,7 @@ class Particle:
 
 
 class FloatingText:
-    def __init__(self, x, y, text, color=(255, 220, 50), font_size=24, lifetime=1.2):
+    def __init__(self, x, y, text, color=(255, 220, 50), font_size=24, lifetime=1.3):
         self.x = x
         self.y = y
         self.text = text
@@ -77,11 +77,12 @@ class FloatingText:
         self.font = pygame.font.SysFont('Arial', font_size, bold=True)
         self.lifetime = lifetime
         self.life = lifetime
-        self.vy = -35.0
+        self.vy = -38.0
 
     def update(self, dt):
         self.life -= dt
         self.y += self.vy * dt
+        self.vy *= 0.96
 
     @property
     def is_alive(self):
@@ -94,11 +95,13 @@ class FloatingText:
         text_surf = self.font.render(self.text, True, self.color)
         text_surf.set_alpha(alpha)
         
-        # Shadow
+        # Shadow / outline
         shadow_surf = self.font.render(self.text, True, (0, 0, 0))
-        shadow_surf.set_alpha(int(alpha * 0.7))
-        surface.blit(shadow_surf, (int(self.x + 2), int(self.y + 2)))
+        shadow_surf.set_alpha(int(alpha * 0.85))
+        for ox, oy in [(-1, -1), (1, -1), (-1, 1), (1, 1), (0, 2)]:
+            surface.blit(shadow_surf, (int(self.x + ox), int(self.y + oy)))
         surface.blit(text_surf, (int(self.x), int(self.y)))
+
 
 
 class ParticleSystem:
