@@ -480,7 +480,7 @@ body {
   max-width: 440px;
 }
 
-/* Difficulty Selector */
+/* Difficulty & Level Selector */
 .diff-selector {
   display: flex;
   flex-direction: column;
@@ -489,10 +489,11 @@ body {
   margin: 6px 0;
 }
 
-.diff-buttons {
-  display: flex;
+.level-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 8px;
-  justify-content: center;
+  width: 100%;
 }
 
 .diff-btn {
@@ -500,20 +501,54 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   font-family: var(--font-main);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 8px 14px;
+  padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.diff-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+}
+
+.diff-btn .lvl-badge {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 1px;
+}
+
+.diff-btn .lvl-name {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.diff-btn .lvl-grid-size {
+  font-size: 9px;
+  color: var(--text-muted);
 }
 
 .diff-btn.active {
-  background: var(--accent-gold);
-  color: #080e1a;
-  border-color: #fff;
-  box-shadow: 0 0 14px rgba(255, 210, 30, 0.6);
+  background: linear-gradient(135deg, rgba(255, 210, 30, 0.25), rgba(0, 229, 255, 0.25));
+  color: #fff;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 16px rgba(255, 210, 30, 0.5);
+  transform: translateY(-2px);
 }
+
+.diff-btn.active .lvl-badge {
+  color: var(--accent-gold);
+}
+
 
 /* CTA Buttons with Hover Progress */
 .btn-group {
